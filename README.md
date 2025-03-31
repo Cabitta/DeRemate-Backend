@@ -1,23 +1,4 @@
 # DeRemate-Backend
-
-Tenemos que tener una rama por cada funcionalidad, que se llamaran de la siguiente manera:
-- feature/authentication
-- feature/register
-- feature/route-managment
-- feature/home-screen
-- feature/delivery
-- feature/delivery-history
-- feature/push-notifications
-
-o de la siguiente manera:
-- feature/authentication-register
-- feature/routeManagment-homeScreen
-- feature/delivery
-- feature/deliveryHistory
-- feature/pushNotifications
-
-Cada uno se encargara de UNO de los CINCO puntos mencionados en el TPO:
-
 1. Autenticación y Registro de Usuarios: 
 ➔ Implementar un sistema de registro que incluya validación de correo electrónico 
 mediante el envío de un código de confirmación. 
@@ -47,3 +28,19 @@ entregas completadas, con detalles como tiempo de entrega, cliente, y estado fin
 5. Notificaciones Push: 
 ➔ Integrar notificaciones push para alertar a los repartidores sobre nuevas rutas 
 disponibles o cambios en las entregas pendientes.
+
+Tenemos que tener una rama por cada funcionalidad, que se llamaran de la siguiente manera:
+- feature/authentication
+- feature/register
+- feature/route-managment
+- feature/home-screen
+- feature/delivery
+- feature/delivery-history
+- feature/push-notifications
+
+o de la siguiente manera:
+- feature/authentication-register
+- feature/routeManagment-homeScreen
+- feature/delivery
+- feature/deliveryHistory
+- feature/pushNotifications
