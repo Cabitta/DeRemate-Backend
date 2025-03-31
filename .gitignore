@@ -1,0 +1,46 @@
+# Compilados Java
+*.class
+
+# Empaquetados
+*.jar
+*.war
+*.ear
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# Maven
+target/
+!target/classes/
+
+# Gradle
+.gradle
+build/
+!build/classes/
+
+# Archivos de log
+*.log
+
+# Archivos temporales
+*.tmp
+*.bak
+*.swp
+*~.swp
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de configuración de Spring Boot
+application*.properties
+application*.yml
+
+# Archivos de entorno
+.env
