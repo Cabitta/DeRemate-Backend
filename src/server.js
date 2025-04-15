@@ -22,3 +22,8 @@ app.listen(PORT, () => {
   connectToMongoDB();
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
+
+
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
