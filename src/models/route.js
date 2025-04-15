@@ -4,7 +4,7 @@ const routeSchema = new mongoose.Schema({
     state: { 
         type: String, 
         required: true, 
-        enum: ['Finished', 'In progress', 'Cancelled'] 
+        enum: ['in_transit', 'pending', 'delivered', 'cancelled'] 
     },
     address: String,
     init_date_time: { type: Date, default: Date.now },
