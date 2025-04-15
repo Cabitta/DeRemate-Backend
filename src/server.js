@@ -30,7 +30,7 @@ app.listen(PORT, () => {
 });
 
 
-app.get("api/delivery-list", (req, res) => {
+app.get("/api/delivery-list", (req, res) => {
   res.status(200).json({
     message: "Hello from the server!",
   });
