@@ -3,8 +3,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { envConfig } from "./utils/envConfig.js";
 import { connectToMongoDB } from "./DB/dbConnection.js";
-import indexRoutes from "./routes/index.routes.js";
-import deliveryHistoryRoutes from "./routes/deliveryHistory.routes.js";
+import deliveryHistoryRoutes from './routes/deliveryHistory.routes.js';
 
 const app = express();
 const PORT = envConfig.PORT || 3000;
@@ -20,8 +19,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use("/api", indexRoutes);
-app.use("/api", deliveryHistoryRoutes);
+app.use('/api', deliveryHistoryRoutes);
+
 
 app.listen(PORT, () => {
   connectToMongoDB();
