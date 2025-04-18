@@ -25,7 +25,7 @@ function validarCorreo(email) {
   
 
 app.post('/login', (request, response)=>{
-    const {Email, Contraseña} = request.body
+    const {Email, password} = request.body
     if (!validarCorreo(Email)){
         console.log("El correo no tiene un formato valido")
         return response.status(400).send("El correo tiene formato invalido")
