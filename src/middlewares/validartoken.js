@@ -41,6 +41,12 @@ export const protectDelivery = async (req, res, next) => {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
+    if (!user.active) {
+      return res
+        .status(401)
+        .json({ error: "No autorizado - Cuenta no verificada" });
+    }
+
     req.user = user;
     next();
   } catch (err) {
