@@ -5,7 +5,7 @@ import { envConfig } from "./utils/envConfig.js";
 import { connectToMongoDB } from "./DB/dbConnection.js";
 import deliveryHistoryRoutes from "./routes/deliveryHistory.routes.js";
 import authRoutes from "./routes/auth.routes.js";
-import availableRoutes from "./routes/available.routes.js";
+import availableRoutes from "./routes/availableRoutes.js";
 import swaggerUI from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger.js";
 
