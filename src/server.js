@@ -5,6 +5,7 @@ import { envConfig } from "./utils/envConfig.js";
 import { connectToMongoDB } from "./DB/dbConnection.js";
 import deliveryHistoryRoutes from './routes/deliveryHistory.routes.js';
 import authRoutes from "./routes/auth.routes.js"
+import nodemailer from "nodemailer"
 
 const app = express();
 const PORT = envConfig.PORT || 3000;

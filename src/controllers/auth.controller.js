@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { envConfig } from "../utils/envConfig.js";
 import Delivery from "../models/delivery.js";
+import enviarmailRecuperacion from '../libs/mailer.js'
 
 function validarContraseña(password) {
   const regex =
@@ -119,6 +120,72 @@ export const login = async (request, response) => {
     response.status(500).json({ mensaje: "Error en el servidor" });
   }
 };
+
+export const forgotpassword = async (request, response)=>{
+  try{
+    const {email} = request.body
+    if (!validarCorreo(email)){
+      return response.status(400).json({mensaje: "El email ingresado no es valido. Pot favor ingrese uno valido"})
+    }
+    const usuarioEncontrado = await delivery.findOne({email})
+    if (!usuarioEncontrado){
+      return response.status(400).json({mensaje: "No existe ninguna cuenta asociada a ese email"})
+    }
+    const token = jwt.sign(
+      {
+        id: usuarioEncontrado._id,
+      },
+      envConfig.JWT_SECRET,
+      { expiresIn: "15m" }
+    )
+    await enviarmailRecuperacion(usuarioEncontrado.email, token)
+    response.cookie("token", token)
+    return response.status(200).json({ mensaje: "El mensaje se envio correctamente"})
+
+  }catch (error){
+    console.error(error)
+    response.status(500).json({mensaje: "Error en el servidor"})
+  }
+}
+
+export const recoverypassword = async (request, response)=>{
+  try{
+    const {token, password, recoverypassword} = request.body
+    if (!token) {
+      return res.status(400).json({ message: "Token invalido o expirado" });
+    }
+    if (!validarContraseña(password)) {
+      return response.status(400).json({
+        mensaje:
+          "La contraseña debe tener 12 caracteres, entre ellas una mayuscula, minuscula, numero y caracter especial",
+      })
+    }
+    if (password !== recoverypassword){
+      return response.status(400).json({
+        mensaje: "Las contraseñas no coinciden. Por favor vuelva a ingresarlas"
+      })
+    }
+    let decodedToken;
+    try {
+      decodedToken = jwt.verify(token, envConfig.JWT_SECRET);
+    } catch (error) {
+      return res.status(400).json({ message: "Token invalido o token expirado" });
+    }
+    
+    const usuarioEncontrado = await delivery.findById(decodedToken.id);
+    if (!usuarioEncontrado) {
+      return res.status(400).json({ message: "Usuario no encontrado" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    usuarioEncontrado.password = hashedPassword;
+    await usuarioEncontrado.save()
+    response.status(200).json({ mensaje: "Contraseña actualizada correctamente." })
+  }catch (error){
+    console.error(error)
+    response.status(500).json({mensaje: "Error en el servidor"})
+  }
+}
+
 
 export const logout = async (request, response) => {
   response.cookie("Token", "", {
