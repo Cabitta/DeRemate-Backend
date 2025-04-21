@@ -1,6 +1,7 @@
 import Route from "../models/route.js";
+import Client from "../models/client.js";
+import Package from "../models/package.js";
 import { availableRouteMapper } from "../mappers/routeMapper.js";
-import "../models/package.js"
 
 export const getAvailableRoutesByDeliveryId = async (req, res) => {
   try {
@@ -13,16 +14,16 @@ export const getAvailableRoutesByDeliveryId = async (req, res) => {
     
     // Fetch available routes for the given deliveryId
     const routes = await Route.find({ delivery: deliveryId, state: "pending" })
-      .populate("client")
-      .populate("package");
+      .populate("package")  
+      .populate("client");
 
     // Check if routes exist
     if (!routes || routes.length === 0) {
       return res.status(404).json({ message: "No available routes found" });
     }
-    console.log("Routes fetched from DB:", routes);
-    
-
+    console.log("Routes fetched from DB:", routes); // Debugging line
+    const packages = await Package.findOne();
+    console.log("package:", packages); // Debugging line
     // Map the routes to DTOs
     const dtos = routes.map(availableRouteMapper);
 
