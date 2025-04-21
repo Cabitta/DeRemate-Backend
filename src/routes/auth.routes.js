@@ -17,5 +17,3 @@ router.get("/profile", authRequired, profile);
 router.post("/verify/:token", verifyAccount);
 
 export default router;
-
-// hola rodirigo

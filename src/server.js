@@ -5,6 +5,7 @@ import { envConfig } from "./utils/envConfig.js";
 import { connectToMongoDB } from "./DB/dbConnection.js";
 import deliveryHistoryRoutes from "./routes/deliveryHistory.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import availableRoutes from "./routes/available.routes.js";
 import swaggerUI from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger.js";
 
@@ -27,6 +28,7 @@ app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
 app.use("/api", deliveryHistoryRoutes);
 app.use("/api", authRoutes);
+app.use("/api", availableRoutes);
 
 app.listen(PORT, () => {
   connectToMongoDB();
