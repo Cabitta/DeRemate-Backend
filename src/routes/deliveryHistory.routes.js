@@ -1,6 +1,6 @@
 import express from "express";
 import Route from "../models/route.js";
-import routeMapper from "../mappers/routeMapper.js";
+import { historyRouteMapper } from "../mappers/routeMapper.js";
 import DeliveryMapper from "../mappers/DeliveryMapper.js";
 import Client from "../models/client.js";
 import { protectDelivery } from "../middlewares/validartoken.js";
@@ -18,7 +18,7 @@ router.get("/delivery-history-list", protectDelivery, async (req, res) => {
     }
 
     const routes = await Route.find(filter).populate("client");
-    const dtos = routes.map(routeMapper);
+    const dtos = routes.map(historyRouteMapper);
 
     res.json(dtos);
   } catch (error) {

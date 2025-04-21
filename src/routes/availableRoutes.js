@@ -6,7 +6,7 @@ const router = Router();
 
 router.get(
   "/available-routes",
-  //protectDelivery,
+  //protectDelivery, TODO: Uncomment this line when the protectDelivery middleware is ready
   getAvailableRoutesByDeliveryId
 );
 
