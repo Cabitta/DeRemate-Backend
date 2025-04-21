@@ -5,7 +5,7 @@ import { protectDelivery } from "../middlewares/validartoken.js";
 const router = Router();
 
 router.get(
-  "/available-routes/:deliveryId",
+  "/available-routes",
   //protectDelivery,
   getAvailableRoutesByDeliveryId
 );
