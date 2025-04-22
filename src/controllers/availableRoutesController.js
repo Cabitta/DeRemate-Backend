@@ -21,14 +21,11 @@ export const getAvailableRoutesByDeliveryId = async (req, res) => {
     if (!routes || routes.length === 0) {
       return res.status(404).json({ message: "No available routes found" });
     }
-    console.log("Routes fetched from DB:", routes); // Debugging line
-    const packages = await Package.findOne();
-    console.log("package:", packages); // Debugging line
+
     // Map the routes to DTOs
     const dtos = routes.map(availableRouteMapper);
 
     res.json(dtos);
-    
   } catch (error) {
     console.error("Error fetching available routes:", error);
     res.status(500).json({
