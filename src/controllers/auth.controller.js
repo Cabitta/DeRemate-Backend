@@ -39,11 +39,21 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassowrd = await bcrypt.hash(password, salt);
 
+    // Generar código de verificación de 5 dígitos
+    const verificationCode = Math.floor(
+      10000 + Math.random() * 90000
+    ).toString();
+
+    const verificationCodeExpires = new Date();
+    verificationCodeExpires.setHours(verificationCodeExpires.getHours() + 1);
+
     const newAccount = new Delivery({
       firstname,
       lastname,
       email,
       password: hashedPassowrd,
+      verificationCode,
+      verificationCodeExpires,
     });
 
     if (!newAccount) {
@@ -56,12 +66,7 @@ export const register = async (req, res) => {
       expiresIn: "12h",
     });
 
-    const verificationToken = jwt.sign(
-      { id: newAccount._id },
-      envConfig.JWT_EMAIL_VALIDATION,
-      { expiresIn: "1h" }
-    );
-
+    // Configurar el envío de email con el código
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -69,12 +74,24 @@ export const register = async (req, res) => {
         pass: envConfig.EMAIL_PASSWORD,
       },
     });
+
     const mailOptions = {
       from: envConfig.EMAIL_USER,
       to: email,
-      subject: "Verify your account",
-      text: `Please verify your account by clicking the link: http://localhost:3000/verify/${verificationToken}`,
+      subject: "Código de verificación de DeRemate",
+      text: `Tu código de verificación es: ${verificationCode}\n\nEste código expirará en 1 hora.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+          <h2>¡Bienvenido a DeRemate!</h2>
+          <p>Por favor utiliza el siguiente código para verificar tu cuenta:</p>
+          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; letter-spacing: 5px; font-weight: bold;">
+            ${verificationCode}
+          </div>
+          <p>Este código expirará en 1 hora.</p>
+        </div>
+      `,
     };
+
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error("Error sending email:", error);
@@ -85,7 +102,7 @@ export const register = async (req, res) => {
 
     res.status(201).json({
       message:
-        "Account created successfully. Please check your email for verification.",
+        "Cuenta creada exitosamente. Por favor revisa tu correo para obtener el código de verificación.",
       token,
     });
   } catch (err) {
@@ -96,42 +113,40 @@ export const register = async (req, res) => {
 
 export const verifyAccount = async (req, res) => {
   try {
-    const { token } = req.params;
+    const { email, code } = req.body;
 
-    if (!token) {
-      return res
-        .status(400)
-        .json({ message: "Token de verificación no proporcionado" });
+    if (!email || !code) {
+      return res.status(400).json({
+        message:
+          "Se requiere el correo electrónico y el código de verificación",
+      });
     }
 
-    const decoded = jwt.verify(token, envConfig.JWT_EMAIL_VALIDATION);
-    const user = await Delivery.findById(decoded.id);
+    const user = await Delivery.findOne({
+      email,
+      verificationCode: code,
+      verificationCodeExpires: { $gt: new Date() },
+    });
 
     if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
+      return res.status(400).json({
+        message: "Código inválido o expirado",
+      });
     }
 
     if (user.active) {
       return res.status(400).json({ message: "Cuenta ya verificada" });
     }
 
+    // Actualizar usuario
     user.active = true;
+    user.verificationCode = null;
+    user.verificationCodeExpires = null;
     await user.save();
 
     res.status(200).json({ message: "Cuenta verificada exitosamente" });
   } catch (error) {
     console.error("Error en verificación de cuenta:", error);
-
-    if (error.name === "JsonWebTokenError") {
-      return res.status(400).json({ message: "Token inválido" });
-    }
-
-    if (error.name === "TokenExpiredError") {
-      return res.status(400).json({
-        message: "El token ha expirado. Por favor solicite uno nuevo.",
-      });
-    }
-
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

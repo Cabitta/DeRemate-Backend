@@ -14,6 +14,6 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
 router.get("/profile", authRequired, profile);
-router.post("/verify/:token", verifyAccount);
+router.post("/verify/", verifyAccount);
 
 export default router;
