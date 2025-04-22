@@ -1,0 +1,98 @@
+paths:
+  /api/deliveries/history/{agentId}/{deliveryId}:
+    get:
+      summary: Obtener detalle de una entrega específica
+      tags:
+        - Historial de Entregas
+      parameters:
+        - in: path
+          name: agentId
+          required: true
+          schema:
+            type: string
+          description: ID del repartidor
+        - in: path
+          name: deliveryId
+          required: true
+          schema:
+            type: string
+          description: ID de la entrega
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: Token JWT del repartidor
+      responses:
+        "200":
+          description: Detalle de la entrega encontrado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderId:
+                    type: string
+                    example: "507f1f77bcf86cd799439011"
+                  clientName:
+                    type: string
+                    example: "Juan"
+                  clientLastname:
+                    type: string
+                    example: "Pérez"
+                  clientFullName:
+                    type: string
+                    example: "Juan Pérez"
+                  address:
+                    type: string
+                    example: "Av. Siempreviva 742"
+                  status:
+                    type: string
+                    enum: [in_transit, pending, delivered, cancelled]
+                    example: "delivered"
+                  qrCode:
+                    type: string
+                    example: "QR123456"
+                  packageLocation:
+                    type: object
+                    properties:
+                      sector:
+                        type: string
+                        example: "A"
+                      shelf:
+                        type: string
+                        example: "3"
+                      column:
+                        type: string
+                        example: "2"
+                  initDateTime:
+                    type: string
+                    format: date-time
+                    example: "2024-03-15T10:00:00Z"
+                  endDateTime:
+                    type: string
+                    format: date-time
+                    example: "2024-03-15T11:30:00Z"
+                  deliveryTime:
+                    type: string
+                    example: "1.50 hours"
+        "404":
+          description: Entrega no encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Entrega no encontrada"
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Ocurrió un error al obtener los detalles de la entrega"

@@ -203,6 +203,7 @@ export const login = async (request, response) => {
       user: deliverySaved,
       token,
       deliveryId: deliverySaved._id,
+
     });
   } catch (error) {
     console.error(error);
