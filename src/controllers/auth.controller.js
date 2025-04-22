@@ -4,11 +4,22 @@ import jwt from "jsonwebtoken";
 import { envConfig } from "../utils/envConfig.js";
 import Delivery from "../models/delivery.js";
 import enviarmailRecuperacion from '../libs/mailer.js'
+import nodemailer from "nodemailer";
+const codigosTemporales = new Map();
 
 function validarContraseña(password) {
   const regex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;"'<>,.?/\\|`~]).{12,}$/;
   return regex.test(password);
+}
+
+function buscarEmailPorCodigo(codigoBuscado) {
+  for (const [email, datos] of codigosTemporales.entries()) {
+    if (datos.codigo == codigoBuscado) {
+      return { email, datos };
+    }
+  }
+  return null;
 }
 
 export const register = async (req, res) => {
@@ -31,13 +42,11 @@ export const register = async (req, res) => {
       });
     }
 
-    // Check if user already exists
     const existingAccount = await Delivery.findOne({ email });
     if (existingAccount) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassowrd = await bcrypt.hash(password, salt);
 
@@ -54,12 +63,37 @@ export const register = async (req, res) => {
 
     await newAccount.save();
 
-    // Generate JWT token
     const token = jwt.sign({ id: newAccount._id }, envConfig.JWT_SECRET, {
       expiresIn: "12h",
     });
 
-    // Send response
+    const verificationToken = jwt.sign(
+      { id: newAccount._id },
+      envConfig.JWT_EMAIL_VALIDATION,
+      { expiresIn: "1h" }
+    );
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: envConfig.EMAIL_USER,
+        pass: envConfig.EMAIL_PASSWORD,
+      },
+    });
+    const mailOptions = {
+      from: envConfig.EMAIL_USER,
+      to: email,
+      subject: "Verify your account",
+      text: `Please verify your account by clicking the link: http://localhost:3000/verify/${verificationToken}`,
+    };
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+        return res.status(500).json({ message: "Failed to send email" });
+      }
+      console.log("Email sent:", info.response);
+    });
+
     res.status(201).json({
       message:
         "Account created successfully. Please check your email for verification.",
@@ -71,6 +105,48 @@ export const register = async (req, res) => {
   }
 };
 
+export const verifyAccount = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    if (!token) {
+      return res
+        .status(400)
+        .json({ message: "Token de verificación no proporcionado" });
+    }
+
+    const decoded = jwt.verify(token, envConfig.JWT_EMAIL_VALIDATION);
+    const user = await Delivery.findById(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    if (user.active) {
+      return res.status(400).json({ message: "Cuenta ya verificada" });
+    }
+
+    user.active = true;
+    await user.save();
+
+    res.status(200).json({ message: "Cuenta verificada exitosamente" });
+  } catch (error) {
+    console.error("Error en verificación de cuenta:", error);
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(400).json({ message: "Token inválido" });
+    }
+
+    if (error.name === "TokenExpiredError") {
+      return res.status(400).json({
+        message: "El token ha expirado. Por favor solicite uno nuevo.",
+      });
+    }
+
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
 function validarCorreo(email) {
   const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return regex.test(email);
@@ -79,6 +155,8 @@ function validarCorreo(email) {
 export const login = async (request, response) => {
   try {
     const { email, password } = request.body;
+    console.log(email)
+    console.log(password)
     // Validaciones antes de consultar la base de datos
     if (!validarCorreo(email)) {
       return response.status(400).json({ mensaje: "Correo inválido" });
@@ -91,8 +169,17 @@ export const login = async (request, response) => {
     }
     const deliverySaved = await delivery.findOne({ email });
     if (!deliverySaved) {
+      console.log("No se encontro usuario")
       return response.status(400).json({ mensaje: "Usuario no encontrado" });
     }
+
+    if (!deliverySaved.active) {
+      return response.status(400).json({
+        mensaje:
+          "Usuario no verificado, por favor verifica tu cuenta. Revisa tu correo electrónico",
+      });
+    }
+
     const contraseñaPerfecta = await bcrypt.compare(
       password,
       deliverySaved.password
@@ -124,11 +211,14 @@ export const login = async (request, response) => {
 export const forgotpassword = async (request, response)=>{
   try{
     const {email} = request.body
+    console.log(email)
     if (!validarCorreo(email)){
+      console.log("No toma al mail como valido")
       return response.status(400).json({mensaje: "El email ingresado no es valido. Pot favor ingrese uno valido"})
     }
     const usuarioEncontrado = await delivery.findOne({email})
     if (!usuarioEncontrado){
+      console.log("No encuentra al usuario indicado en la base de datos")
       return response.status(400).json({mensaje: "No existe ninguna cuenta asociada a ese email"})
     }
     const token = jwt.sign(
@@ -138,15 +228,60 @@ export const forgotpassword = async (request, response)=>{
       envConfig.JWT_SECRET,
       { expiresIn: "15m" }
     )
-    await enviarmailRecuperacion(usuarioEncontrado.email, token)
+    console.log("Se debe enviar el correo")
+    const codigo = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
+  const expiracion = Date.now() + 15 * 60 * 1000; // 15 minutos
+  codigosTemporales.delete(email)
+  codigosTemporales.set(email, { codigo, expiracion });
+    //await enviarmailRecuperacion(usuarioEncontrado.email, token)
+    await enviarmailRecuperacion(usuarioEncontrado.email, codigo)
     response.cookie("token", token)
     return response.status(200).json({ mensaje: "El mensaje se envio correctamente"})
 
   }catch (error){
+    console.log("Tira error predeterminado")
     console.error(error)
     response.status(500).json({mensaje: "Error en el servidor"})
   }
 }
+
+export const resetpassword = async(request, response) => {
+  try{
+    const { code, newpassword, confirmPassword} = request.body;
+  const entrada = buscarEmailPorCodigo(code);
+  console.log(JSON.stringify(Array.from(codigosTemporales.entries()), null, 2));
+
+  if (!entrada) {
+    console.log("Lo toma como no valido")
+    return response.status(400).json({ mensaje: 'Codigo no valido' });
+  }
+  if (Date.now() > entrada.expiracion) {
+    codigosTemporales.delete(entrada.email);
+    console.log("Codigo vencido")
+    return response.status(400).json({ mensaje: 'El código expiró, solicitá uno nuevo' });
+  }
+  if (!validarContraseña(newpassword)) {
+    console.log("Considera que la contraseña es segura")
+    return response.status(400).json({ mensaje: 'Contraseña insegura' });
+  }
+  if (newpassword != confirmPassword){
+    console.log(newpassword)
+    console.log(confirmPassword)
+    console.log("Las contraseñas no coinciden")
+    return response.status(400).json({mensaje: "Las contraseñas no coinciden"});
+  }
+  console.log("Otro problema")
+  const usuarioEncontrado = await delivery.findOne({email: entrada.email});
+  const hashedPassword = await bcrypt.hash(newpassword, 10);
+    usuarioEncontrado.password = hashedPassword;
+    await usuarioEncontrado.save()
+  return response.status(200).json({ mensaje: 'La contraseña fue modificada exitosamente'});
+}catch(error){
+  response.status(500).json({mensaje: "Error en el servidor"})
+}
+}
+
+
 
 export const recoverypassword = async (request, response)=>{
   try{
