@@ -1,30 +1,13 @@
 import mongoose from "mongoose";
 
 const deliverySchema = new mongoose.Schema({
-  firstname: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  lastname: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    trim: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  active: {
-    type: Boolean,
-    default: false,
-  },
+  firstname: String,
+  lastname: String,
+  email: String,
+  password: String,
+  active: { type: Boolean, default: false },
+  verificationCode: { type: String, default: null },
+  verificationCodeExpires: { type: Date, default: null },
 });
 
 export default mongoose.model("Delivery", deliverySchema);
