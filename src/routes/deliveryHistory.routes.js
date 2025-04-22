@@ -30,14 +30,14 @@ router.get("/delivery-history-list", protectDelivery, async (req, res) => {
 
 router.get(
   "/deliveries/history/:agentId/:deliveryId",
-  protectDelivery,
+  //protectDelivery,
   async (req, res) => {
     try {
       const { agentId, deliveryId } = req.params;
 
       const route = await Route.findOne({
-        _id: deliveryId,
-        delivery: agentId,
+        delivery: deliveryId,
+        client: agentId,
       }).populate(["client", "package"]);
 
       if (!route) {
