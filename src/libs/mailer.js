@@ -8,8 +8,9 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-async function enviarMailRecuperacion(destinatario, token) {
-  const enlace = `https://localhost:3000/api/recovery-password?token=${token}`;
+async function enviarMailRecuperacion(destinatario, codigo) {
+  
+  //const enlace = `https://localhost:3000/api/recovery-password?token=${token}`;
 
   const mailOptions = {
     from: 'rodrigo.moens@gmail.com',
@@ -17,7 +18,7 @@ async function enviarMailRecuperacion(destinatario, token) {
     subject: 'Recuperación de contraseña',
     html: `
       <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-      <p><a href="${enlace}">Haz clic aquí para cambiarla</a></p>
+      <p>Ingrese el codigo "${codigo}" en la aplicacion.</p>
       <p>Este enlace expirará en 1 hora.</p>
     `
   };
