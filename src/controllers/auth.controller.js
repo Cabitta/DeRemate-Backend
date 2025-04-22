@@ -202,6 +202,8 @@ export const login = async (request, response) => {
       message: "Inicio de sesion exitoso",
       user: deliverySaved,
       token,
+      deliveryId: deliverySaved._id,
+
     });
   } catch (error) {
     console.error(error);
