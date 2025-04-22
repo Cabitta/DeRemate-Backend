@@ -2,9 +2,7 @@ import express from "express";
 import Route from "../models/route.js";
 import { historyRouteMapper } from "../mappers/routeMapper.js";
 import DeliveryMapper from "../mappers/DeliveryMapper.js";
-import Client from "../models/client.js";
 import { protectDelivery } from "../middlewares/validartoken.js";
-import mongoose from "mongoose";
 import { responseTimeMiddleware } from "../middlewares/responseTimeMiddleware.js";
 
 const router = express.Router();
@@ -31,54 +29,46 @@ router.get("/delivery-history-list", async (req, res) => {
   }
 });
 
-router.get(
-  "/deliveries/history/:agentId/:deliveryId",
-  //protectDelivery,
-  async (req, res) => {
-    try {
-      const { agentId, deliveryId } = req.params;
+router.get("/delivery-details/:routeId", async (req, res) => {
+  try {
+    const { routeId } = req.params;
 
-      if (!mongoose.Types.ObjectId.isValid(agentId)) {
-        return res.status(400).json({ error: "ID de agente inválido" });
-      }
+    console.log(`Buscando ruta con ID: ${routeId}`);
 
-      if (!mongoose.Types.ObjectId.isValid(deliveryId)) {
-        return res.status(400).json({ error: "ID de entrega inválido" });
-      }
+    let route = await Route.findById(routeId).populate(["client", "package"]);
 
-      console.log(
-        `Solicitud de detalles - Agente: ${agentId}, Entrega: ${deliveryId}, Fecha: ${new Date().toISOString()}`
+    if (!route) {
+      console.log("No se encontró con findById, intentando con find...");
+      const routes = await Route.find({}).populate(["client", "package"]);
+      route = routes.find(
+        (r) => r._id.toString() === routeId || r._id === routeId
       );
+    }
 
-      const route = await Route.findOne({
-        delivery: deliveryId,
-        client: agentId,
-      }).populate(["client", "package"]);
-
-      if (!route) {
-        return res.status(404).json({ error: "Entrega no encontrada" });
-      }
-
-      const deliveryDetail = DeliveryMapper.toDetail(route);
-
-      const responseTime = new Date() - req.startTime;
-      console.log(`Tiempo de respuesta: ${responseTime}ms`);
-
-      res.json(deliveryDetail);
-    } catch (error) {
-      console.error("Error al obtener detalles de entrega:", error);
-      if (error.name === "CastError") {
-        return res.status(400).json({ error: "Formato de ID incorrecto" });
-      } else if (error.name === "ValidationError") {
-        return res
-          .status(400)
-          .json({ error: "Error de validación", details: error.message });
-      }
-      res.status(500).json({
-        error: "Ocurrió un error al obtener los detalles de la entrega",
-        message: error.message,
+    if (!route) {
+      return res.status(404).json({
+        error: "Ruta no encontrada",
+        routeId: routeId,
       });
     }
+
+    console.log("Ruta encontrada:", route);
+    const deliveryDetail = DeliveryMapper.toDetail(route);
+    res.json(deliveryDetail);
+  } catch (error) {
+    console.error("Error al obtener detalles de entrega:", error);
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        error: "Formato de ID incorrecto",
+        message: error.message,
+        routeId: req.params.routeId,
+      });
+    }
+    res.status(500).json({
+      error: "Ocurrió un error al obtener los detalles de la entrega",
+      message: error.message,
+    });
   }
-);
+});
+
 export default router;
