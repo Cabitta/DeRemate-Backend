@@ -1,5 +1,6 @@
 class RouteDTO {
-    constructor({ state, address, init_date_time, end_date_time, client_name, client_lastname, delivery_time, client_email,  package_sector, package_estante, package_columna_estante }) {
+    constructor({ id, state, address, init_date_time, end_date_time, client_name, client_lastname, delivery_time, client_email,  package_sector, package_estante, package_columna_estante }) {
+        this.id = id;
         this.state = state;
         this.address = address;
         this.init_date_time = init_date_time;
