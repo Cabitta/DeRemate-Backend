@@ -1,9 +1,10 @@
 import routeDTO from '../dtos/routeDTO.js';
 
-const routeMapper = (route) => {
+export const historyRouteMapper = (route) => {
     if (!route) return null;
 
     return new routeDTO({
+        id: route._id,
         state: route.state,
         end_date_time: route.end_date_time,
         client_name: route.client?.firstname,
@@ -12,11 +13,26 @@ const routeMapper = (route) => {
     });
 };
 
+export const availableRouteMapper = (route) => {
+    if (!route) return null;
+
+    return new routeDTO({
+        address: route.address,
+        
+        client_name: route.client?.firstname,
+        client_lastname: route.client?.lastname,
+        client_email: route.client?.email,
+
+        package_sector: route.package?.sector,
+        package_estante: route.package?.estante,
+        package_columna_estante: route.package?.columna_estante,
+    });
+}
+
 function calculateDeliveryTime(initDate, endDate) {
     if (!initDate || !endDate) return null;
     const diffMs = new Date(endDate) - new Date(initDate);
     const diffHours = diffMs / (1000 * 60 * 60);
     return `${diffHours.toFixed(2)} hours`;
 }
-
-export default routeMapper;
+;
