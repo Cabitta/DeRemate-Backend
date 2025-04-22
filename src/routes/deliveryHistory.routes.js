@@ -7,7 +7,7 @@ import { protectDelivery } from "../middlewares/validartoken.js";
 
 const router = express.Router();
 
-router.get("/delivery-history-list", protectDelivery, async (req, res) => {
+router.get("/delivery-history-list", async (req, res) => {
   try {
     const { deliveryId } = req.query;
 

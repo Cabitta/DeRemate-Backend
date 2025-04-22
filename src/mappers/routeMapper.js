@@ -4,6 +4,7 @@ export const historyRouteMapper = (route) => {
     if (!route) return null;
 
     return new routeDTO({
+        id: route._id,
         state: route.state,
         end_date_time: route.end_date_time,
         client_name: route.client?.firstname,
