@@ -2,13 +2,14 @@ import express from "express";
 import Route from "../models/route.js";
 import { historyRouteMapper } from "../mappers/routeMapper.js";
 import DeliveryMapper from "../mappers/DeliveryMapper.js";
-import { protectDelivery } from "../middlewares/validartoken.js";
+import { authRequired, protectDelivery } from "../middlewares/validartoken.js";
 import { responseTimeMiddleware } from "../middlewares/responseTimeMiddleware.js";
 
 const router = express.Router();
 router.use(responseTimeMiddleware);
 
-router.get("/delivery-history-list", async (req, res) => {
+// Proteger la ruta de historial con autenticación
+router.get("/delivery-history-list", authRequired, async (req, res) => {
   try {
     const { deliveryId } = req.query;
 
@@ -29,7 +30,8 @@ router.get("/delivery-history-list", async (req, res) => {
   }
 });
 
-router.get("/delivery-details/:routeId", async (req, res) => {
+// Proteger la ruta de detalles con autenticación
+router.get("/delivery-details/:routeId", authRequired, async (req, res) => {
   try {
     const { routeId } = req.params;
 

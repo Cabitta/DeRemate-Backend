@@ -1,20 +1,21 @@
 import jwt from "jsonwebtoken";
 import { envConfig } from "../utils/envConfig.js";
 import Delivery from "../models/delivery.js";
+import passport from "passport";
 
-export const authRequired = (request, response, next) => {
-  const { token } = request.cookies;
-  if (!token) {
-    return response
-      .status(401)
-      .json({ mensaje: "No hay token. Autorizacion denegada" });
-  }
-  try {
-    const tokenValido = jwt.verify(token, "secret123");
+export const authRequired = (req, res, next) => {
+  passport.authenticate("jwt", { session: false }, (err, user, info) => {
+    if (err) {
+      return res.status(500).json({ mensaje: "Error interno del servidor" });
+    }
+    if (!user) {
+      return res
+        .status(401)
+        .json({ mensaje: info?.message || "No autorizado" });
+    }
+    req.user = user;
     next();
-  } catch (error) {
-    return response.status(401).json({ mensaje: "Token invalido o expirado" });
-  }
+  })(req, res, next);
 };
 
 const verifyToken = (token) => {
@@ -22,35 +23,19 @@ const verifyToken = (token) => {
 };
 
 export const protectDelivery = async (req, res, next) => {
-  try {
-    const token = req.body.jwt;
-
-    if (!token) {
-      return res
-        .status(401)
-        .json({ error: "No autorizado - Token no proporcionado" });
+  passport.authenticate("jwt", { session: false }, async (err, user, info) => {
+    if (err) {
+      console.log("Error en middleware protectDelivery", err.message);
+      return res.status(500).json({ error: "Error interno del servidor" });
     }
-
-    const decoded = verifyToken(token);
-
-    const user = await Delivery.findById(decoded.id)
-      .select("-password -resetPasswordToken")
-      .lean();
-
     if (!user) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
-    }
-
-    if (!user.active) {
       return res
         .status(401)
-        .json({ error: "No autorizado - Cuenta no verificada" });
+        .json({ error: info?.message || "No autorizado - Token no válido" });
     }
 
     req.user = user;
+
     next();
-  } catch (err) {
-    console.log("Error en middleware protectRouteUser", err.message);
-    return res.status(500).json({ error: "Error interno del servidor" });
-  }
+  })(req, res, next);
 };
