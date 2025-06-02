@@ -28,6 +28,7 @@ if (!envFileLoaded) {
 
 // Verificar variables críticas
 const JWT_SECRET = process.env.JWT_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || JWT_SECRET;
 if (!JWT_SECRET) {
   console.warn("⚠️  JWT_SECRET no está definido en las variables de entorno");
 }
@@ -36,6 +37,9 @@ export const envConfig = {
   PORT: process.env.PORT || 3000,
   DB_URI: process.env.DB_URI || "mongodb://localhost:27017/deremate",
   JWT_SECRET: JWT_SECRET || "fallback_secret_key_only_for_development",
+  REFRESH_TOKEN_SECRET: REFRESH_TOKEN_SECRET,
+  ACCESS_TOKEN_EXPIRES: process.env.ACCESS_TOKEN_EXPIRES || "1h", // Token de acceso expira en 1 hora
+  REFRESH_TOKEN_EXPIRES: process.env.REFRESH_TOKEN_EXPIRES || "7d", // Refresh token expira en 7 días
   JWT_EMAIL_VALIDATION:
     process.env.JWT_EMAIL_VALIDATION || "email_validation_key",
   EMAIL_USER: process.env.EMAIL_USER,

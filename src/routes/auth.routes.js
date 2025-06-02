@@ -8,6 +8,7 @@ import {
   recoverypassword,
   forgotpassword,
   resetpassword,
+  refreshToken,
 } from "../controllers/auth.controller.js";
 import { authRequired } from "../middlewares/validartoken.js";
 import passport from "passport";
@@ -21,6 +22,7 @@ router.post(
   passport.authenticate("login", { session: false }),
   login
 );
+router.post("/refresh-token", refreshToken);
 router.post("/forgotpassword", forgotpassword);
 router.put("/recoverypassword", recoverypassword);
 router.post("/resetpassword", resetpassword);
