@@ -170,18 +170,74 @@ function validarCorreo(email) {
   return regex.test(email);
 }
 
+// Agregar esta función para generar tokens de acceso y refresh
+const generateTokens = (userId) => {
+  // Generar token de acceso
+  const accessToken = jwt.sign({ id: userId }, envConfig.JWT_SECRET, {
+    expiresIn: envConfig.ACCESS_TOKEN_EXPIRES,
+  });
+
+  // Calcular fecha de expiración para el cliente
+  const accessTokenExpiry = new Date();
+  // Parsear el tiempo de expiración (por ejemplo, '1h' a milisegundos)
+  const expiresInMs = parseExpirationTime(envConfig.ACCESS_TOKEN_EXPIRES);
+  accessTokenExpiry.setTime(accessTokenExpiry.getTime() + expiresInMs);
+
+  // Generar refresh token con expiración más larga
+  const refreshToken = jwt.sign(
+    { id: userId },
+    envConfig.REFRESH_TOKEN_SECRET,
+    { expiresIn: envConfig.REFRESH_TOKEN_EXPIRES }
+  );
+
+  // Calcular fecha de expiración del refresh token para guardarlo en DB
+  const refreshTokenExpiry = new Date();
+  const refreshExpiresInMs = parseExpirationTime(
+    envConfig.REFRESH_TOKEN_EXPIRES
+  );
+  refreshTokenExpiry.setTime(refreshTokenExpiry.getTime() + refreshExpiresInMs);
+
+  return {
+    accessToken,
+    refreshToken,
+    accessTokenExpiry,
+    refreshTokenExpiry,
+  };
+};
+
+// Función para parsear el tiempo de expiración (1h, 7d, etc.) a milisegundos
+const parseExpirationTime = (expirationString) => {
+  const unit = expirationString.charAt(expirationString.length - 1);
+  const value = parseInt(expirationString.slice(0, -1));
+
+  switch (unit) {
+    case "s":
+      return value * 1000; // segundos
+    case "m":
+      return value * 60 * 1000; // minutos
+    case "h":
+      return value * 60 * 60 * 1000; // horas
+    case "d":
+      return value * 24 * 60 * 60 * 1000; // días
+    default:
+      return 3600 * 1000; // por defecto 1 hora
+  }
+};
+
+// Modificar el login para usar la nueva función de generación de tokens
 export const login = async (request, response) => {
   try {
     // Passport ya validó las credenciales y colocó el usuario en request.user
     const user = request.user;
 
-    const token = jwt.sign(
-      {
-        id: user._id,
-      },
-      envConfig.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    // Generar tokens y fechas de expiración
+    const { accessToken, refreshToken, accessTokenExpiry, refreshTokenExpiry } =
+      generateTokens(user._id);
+
+    // Guardar el refresh token en la base de datos
+    user.refreshToken = refreshToken;
+    user.refreshTokenExpires = refreshTokenExpiry;
+    await user.save();
 
     // Formatear la respuesta para facilitar el uso con scripts de Postman
     const userData = {
@@ -192,16 +248,82 @@ export const login = async (request, response) => {
       active: user.active,
     };
 
-    response.cookie("token", token);
+    response.cookie("token", accessToken);
+    response.cookie("refreshToken", refreshToken, { httpOnly: true });
+
     response.json({
       message: "Inicio de sesion exitoso",
       user: userData,
-      token,
+      token: accessToken,
+      refreshToken: refreshToken,
+      expirationDate: accessTokenExpiry,
       deliveryId: user._id,
     });
   } catch (error) {
     console.error(error);
     response.status(500).json({ mensaje: "Error en el servidor" });
+  }
+};
+
+// Añadir nuevo endpoint para refresh token
+export const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res
+        .status(401)
+        .json({ mensaje: "Refresh token no proporcionado" });
+    }
+
+    // Verificar refresh token
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, envConfig.REFRESH_TOKEN_SECRET);
+    } catch (error) {
+      return res
+        .status(401)
+        .json({ mensaje: "Refresh token inválido o expirado" });
+    }
+
+    // Buscar usuario con ese refresh token
+    const user = await Delivery.findOne({
+      _id: decoded.id,
+      refreshToken: refreshToken,
+      refreshTokenExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ mensaje: "Token no válido para este usuario o expirado" });
+    }
+
+    // Generar nuevos tokens
+    const {
+      accessToken,
+      refreshToken: newRefreshToken,
+      accessTokenExpiry,
+      refreshTokenExpiry,
+    } = generateTokens(user._id);
+
+    // Actualizar refresh token en la base de datos
+    user.refreshToken = newRefreshToken;
+    user.refreshTokenExpires = refreshTokenExpiry;
+    await user.save();
+
+    res.cookie("token", accessToken);
+    res.cookie("refreshToken", newRefreshToken, { httpOnly: true });
+
+    return res.json({
+      token: accessToken,
+      refreshToken: newRefreshToken,
+      expirationDate: accessTokenExpiry,
+      deliveryId: user._id,
+    });
+  } catch (error) {
+    console.error("Error al refrescar token:", error);
+    return res.status(500).json({ mensaje: "Error en el servidor" });
   }
 };
 
@@ -334,11 +456,33 @@ export const recoverypassword = async (request, response) => {
   }
 };
 
+// Modificar el logout para invalidar también el refresh token
 export const logout = async (request, response) => {
-  response.cookie("Token", "", {
-    expires: new Date(0),
-  });
-  return response.sendStatus(200);
+  try {
+    // Si tenemos el usuario en el request gracias a algún middleware
+    if (request.user) {
+      const user = await Delivery.findById(request.user._id);
+      if (user) {
+        user.refreshToken = null;
+        user.refreshTokenExpires = null;
+        await user.save();
+      }
+    }
+
+    response.cookie("token", "", {
+      expires: new Date(0),
+    });
+    response.cookie("refreshToken", "", {
+      expires: new Date(0),
+    });
+
+    return response
+      .status(200)
+      .json({ mensaje: "Sesión cerrada correctamente" });
+  } catch (error) {
+    console.error("Error al cerrar sesión:", error);
+    return response.status(500).json({ mensaje: "Error en el servidor" });
+  }
 };
 
 export const profile = async (request, response) => {
