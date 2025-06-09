@@ -14,8 +14,16 @@ import { configurePassport } from "./passport.config.js";
 const app = express();
 const PORT = envConfig.PORT || 3000;
 
-app.use(cors()); // Menos seguro, pero útil para desarrollo
+//app.use(cors()); // Menos seguro, pero útil para desarrollo
 
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

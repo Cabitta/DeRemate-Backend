@@ -24,6 +24,8 @@ function buscarEmailPorCodigo(codigoBuscado) {
 
 export const register = async (req, res) => {
   try {
+    console.log("Entra al register");
+    console.log(req.body);
     const { firstname, lastname, email, password, confirmPassword } = req.body;
 
     // Validate request body
