@@ -14,17 +14,13 @@ import { configurePassport } from "./passport.config.js";
 const app = express();
 const PORT = envConfig.PORT || 3000;
 
-app.use(
-  cors({
-    origin: envConfig.FRONTEND_URL || "http://localhost:5173",
-    credentials: true,
-  })
-);
+app.use(cors()); // Menos seguro, pero útil para desarrollo
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
+app.use(cors({origin: '*', credentials: true}));
 // Configurar Passport
 const configuredPassport = configurePassport();
 app.use(configuredPassport.initialize());
