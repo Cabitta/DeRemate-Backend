@@ -19,7 +19,7 @@ export const getAvailableRoutesByDeliveryId = async (req, res) => {
 
     // Check if routes exist
     if (!routes || routes.length === 0) {
-      return res.status(404).json({ message: "No available routes found" });
+      return res.status(200).json({ message: "No available routes found" });
     }
 
     // Map the routes to DTOs
@@ -34,3 +34,9 @@ export const getAvailableRoutesByDeliveryId = async (req, res) => {
     
   }
 }
+
+// export const setRouteState = () => {
+//   return (
+//     <div>availableRoutesController</div>
+//   )
+// }
