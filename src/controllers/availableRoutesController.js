@@ -17,21 +17,13 @@ export const getAvailableRoutesByDeliveryId = async (req, res) => {
       .populate("package")  
       .populate("client");
 
-    // Check if routes exist
-    if (!routes || routes.length === 0) {
-      return res.status(200).json({ message: "No available routes found" });
-    }
-
     // Map the routes to DTOs
     const dtos = routes.map(availableRouteMapper);
 
     res.json(dtos);
   } catch (error) {
     console.error("Error fetching available routes:", error);
-    res.status(500).json({
-      error: "An error occurred while fetching available routes.",
-    });
-    
+    res.status(500).json({error: "An error occurred while fetching available routes."});
   }
 }
 
