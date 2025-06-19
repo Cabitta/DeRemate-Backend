@@ -6,7 +6,7 @@ const router = Router();
 
 router.get(
   "/available-routes",
-  protectDelivery, // Now using Passport JWT strategy
+  protectDelivery,
   getAvailableRoutesByDeliveryId
 );
 
