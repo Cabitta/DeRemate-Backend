@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAvailableRoutesByDeliveryId } from "../controllers/availableRoutesController.js";
+import { getAvailableRoutesByDeliveryId, setRouteState } from "../controllers/availableRoutesController.js";
 import { protectDelivery } from "../middlewares/validartoken.js";
 
 const router = Router();
@@ -9,5 +9,11 @@ router.get(
   protectDelivery,
   getAvailableRoutesByDeliveryId
 );
+
+router.put(
+  "/available-routes/set-state",
+  protectDelivery,
+  setRouteState
+)
 
 export default router;
