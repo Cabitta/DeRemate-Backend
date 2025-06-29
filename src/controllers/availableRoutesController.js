@@ -27,29 +27,30 @@ export const getAvailableRoutesByDeliveryId = async (req, res) => {
   }
 }
 
-// export const setRouteState = async (req, res) => {
-//   try {
-//     const { routeId, state } = req.body;
+export const setRouteState = async (req, res) => {
+  try {
+    const { routeId } = req.query;
+    const { newState } = req.body;
 
-//     // Validate input
-//     if (!routeId || !state) {
-//       return res.status(400).json({ message: "Route ID and state are required" });
-//     }
+    // Validate input
+    if (!routeId || !newState) {
+      return res.status(400).json({ message: "Route ID and state are required" });
+    }
 
-//     // Update the route state
-//     const updatedRoute = await Route.findByIdAndUpdate(
-//       routeId,
-//       { state },
-//       { new: true }
-//     );
+    // Update the route state
+    const updatedRoute = await Route.findByIdAndUpdate(
+      routeId,
+      { state: newState },
+      { new: true }
+    );
 
-//     if (!updatedRoute) {
-//       return res.status(404).json({ message: "Route not found" });
-//     }
+    if (!updatedRoute) {
+      return res.status(404).json({ message: "Route not found" });
+    }
 
-//     res.status(200).json({ message: "Route state updated successfully", route: updatedRoute });
-//   } catch (error) {
-//     console.error("Error updating route state:", error);
-//     res.status(500).json({ error: "An error occurred while updating the route state." });
-//   }
-// }
+    res.status(200).json(updatedRoute);
+  } catch (error) {
+    console.error("Error updating route state:", error);
+    res.status(500).json({ error: "An error occurred while updating the route state." });
+  }
+}
