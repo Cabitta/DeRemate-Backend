@@ -10,6 +10,7 @@ import swaggerUI from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger.js";
 import passport from "passport";
 import { configurePassport } from "./passport.config.js";
+import notificationRoutes from "./routes/notification.routes.js";
 
 const app = express();
 const PORT = envConfig.PORT || 3000;
@@ -37,6 +38,7 @@ app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 app.use("/api", deliveryHistoryRoutes);
 app.use("/api", authRoutes);
 app.use("/api", availableRoutes);
+app.use('/api', notificationRoutes);
 
 app.listen(PORT, () => {
   connectToMongoDB();
