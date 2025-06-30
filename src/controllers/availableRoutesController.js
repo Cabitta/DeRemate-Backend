@@ -3,17 +3,11 @@ import Client from "../models/client.js";
 import Package from "../models/package.js";
 import { availableRouteMapper } from "../mappers/routeMapper.js";
 
-export const getAvailableRoutesByDeliveryId = async (req, res) => {
+export const getAllAvailableRoutes = async (req, res) => {
   try {
-    const { deliveryId } = req.query;
-    
-    // Validate deliveryId
-    if (!deliveryId) {
-      return res.status(400).json({ message: "Delivery ID is required" });
-    }
     
     // Fetch available routes for the given deliveryId
-    const routes = await Route.find({ delivery: deliveryId, state: "pending" })
+    const routes = await Route.find({ state: "pending" })
       .populate("package")  
       .populate("client");
 
