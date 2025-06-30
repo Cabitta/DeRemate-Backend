@@ -37,12 +37,12 @@ export const register = async (req, res) => {
     }
 
     console.log("password:", password);
-    if (!validarContraseña(password)) {
-      return res.status(400).json({
-        message:
-          "Password must be at least 12 characters long and include uppercase, lowercase, number, and special character",
-      });
-    }
+    // if (!validarContraseña(password)) {
+    //   return res.status(400).json({
+    //     message:
+    //       "Password must be at least 12 characters long and include uppercase, lowercase, number, and special character",
+    //   });
+    // }
 
     const existingAccount = await Delivery.findOne({ email });
     if (existingAccount) {
