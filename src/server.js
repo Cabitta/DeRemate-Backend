@@ -6,6 +6,7 @@ import { connectToMongoDB } from "./DB/dbConnection.js";
 import deliveryHistoryRoutes from "./routes/deliveryHistory.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import availableRoutes from "./routes/availableRoutes.js";
+import deliveryCodeRoutes from "./routes/deliveryCode.routes.js";
 import swaggerUI from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger.js";
 import passport from "passport";
@@ -37,6 +38,7 @@ app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 app.use("/api", deliveryHistoryRoutes);
 app.use("/api", authRoutes);
 app.use("/api", availableRoutes);
+app.use('/api', deliveryCodeRoutes);
 
 app.listen(PORT, () => {
   connectToMongoDB();
