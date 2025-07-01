@@ -9,7 +9,7 @@ import { sendDeliveryConfirmationEmail } from "./emailService.js";
 export const generateAndAssignDeliveryCode = async (routeId, deliveryId) => {
   try {
     const confirmationCode = generateDeliveryConfirmationCode();
-    const expiryTime = new Date(Date.now() + 30 * 60 * 1000);
+    const expiryTime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 🔄 7 días
 
     const updatedRoute = await Route.findByIdAndUpdate(
       routeId,
