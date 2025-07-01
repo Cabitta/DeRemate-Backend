@@ -1,19 +1,19 @@
 import { Router } from "express";
-import { getAllAvailableRoutes, setRouteState } from "../controllers/availableRoutesController.js";
+import {
+  getAllAvailableRoutes,
+  setRouteState,
+  getInTransitRouteByDeliveryId,
+} from "../controllers/availableRoutesController.js";
 import { protectDelivery } from "../middlewares/validartoken.js";
 
 const router = Router();
 
+router.get("/routes/availables", protectDelivery, getAllAvailableRoutes);
+router.put("/routes/set-state", protectDelivery, setRouteState);
 router.get(
-  "/available-routes",
+  "/routes/in-transit",
   protectDelivery,
-  getAllAvailableRoutes
+  getInTransitRouteByDeliveryId
 );
-
-router.put(
-  "/available-routes/set-state",
-  protectDelivery,
-  setRouteState
-)
 
 export default router;

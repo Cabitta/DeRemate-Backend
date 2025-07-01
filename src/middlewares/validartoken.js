@@ -23,19 +23,40 @@ const verifyToken = (token) => {
 };
 
 export const protectDelivery = async (req, res, next) => {
-  passport.authenticate("jwt", { session: false }, async (err, user, info) => {
-    if (err) {
-      console.log("Error en middleware protectDelivery", err.message);
-      return res.status(500).json({ error: "Error interno del servidor" });
-    }
-    if (!user) {
-      return res
-        .status(401)
-        .json({ error: info?.message || "No autorizado - Token no válido" });
-    }
+  let token;
 
-    req.user = user;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    try {
+      // Obtener token del header
+      token = req.headers.authorization.split(" ")[1];
 
-    next();
-  })(req, res, next);
+      // Verificar token
+      const decoded = jwt.verify(token, envConfig.JWT_SECRET);
+
+      // Obtener delivery de la base de datos
+      const delivery = await Delivery.findById(decoded.id);
+
+      if (!delivery) {
+        return res.status(401).json({
+          error: "Token no válido - Delivery no encontrado",
+        });
+      }
+
+      // Agregar delivery al request
+      req.delivery = delivery;
+      next();
+    } catch (error) {
+      console.error("❌ Error en autenticación:", error.message);
+      return res.status(401).json({
+        error: "Token no válido",
+      });
+    }
+  } else {
+    return res.status(401).json({
+      error: "No se proporcionó token de autorización",
+    });
+  }
 };
