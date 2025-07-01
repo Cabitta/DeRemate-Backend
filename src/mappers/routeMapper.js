@@ -37,6 +37,7 @@ export const inTransitRouteMapper = (route) => {
   if (!route) return null;
 
   return new routeDTO({
+    id: route._id,
     address: route.address,
 
     client_name: route.client?.firstname,
