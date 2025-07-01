@@ -5,18 +5,12 @@ import * as Jimp from 'jimp'
 
 // Generar QRs
 export const generateQRCode = async (request, response) => {
-    const {sector, estante, columna_estante} = request.body;
-    if (!sector){
-        return res.status(400).send('Sector Requerido')
-    }
-    if (!estante){
-        return res.status(400).send('Estante Requerido')
-    }
-    if (!columna_estante){
-        return res.status(400).send('Columna de Estante Requerida')
+    const {id} = request.body;
+    if (!id){
+        return res.status(400).send('ID Requerido')
     }
     try {
-        const qrText = `${sector}:${estante}:${columna_estante}`;
+        const qrText = `${id}`;
         const qrImage = await qrCode.toDataURL(qrText)
         response.send(`
       <html>
@@ -27,7 +21,6 @@ export const generateQRCode = async (request, response) => {
         </body>
       </html>
     `);
-        //response.json({ success: true, qrImage });
     } 
     catch (error) {
         console.error(error);
