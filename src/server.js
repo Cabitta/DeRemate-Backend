@@ -5,6 +5,7 @@ import { envConfig } from "./utils/envConfig.js";
 import { connectToMongoDB } from "./DB/dbConnection.js";
 import deliveryHistoryRoutes from "./routes/deliveryHistory.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import qrRoutes from "./routes/qrRoutes.js"
 import availableRoutes from "./routes/availableRoutes.js";
 import swaggerUI from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger.js";
@@ -27,7 +28,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
 // Configurar Passport
 const configuredPassport = configurePassport();
 app.use(configuredPassport.initialize());
@@ -38,9 +38,10 @@ app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 app.use("/api", deliveryHistoryRoutes);
 app.use("/api", authRoutes);
 app.use("/api", availableRoutes);
+app.use("/api", qrRoutes)
 app.use('/api', notificationRoutes);
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   connectToMongoDB();
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
