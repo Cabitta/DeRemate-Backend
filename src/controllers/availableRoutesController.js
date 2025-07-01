@@ -2,6 +2,8 @@ import Route from "../models/route.js";
 import Client from "../models/client.js";
 import Package from "../models/package.js";
 import { availableRouteMapper } from "../mappers/routeMapper.js";
+import { createNotification } from "./notificationController.js";
+
 
 export const getAllAvailableRoutes = async (req, res) => {
   try {
@@ -43,6 +45,32 @@ export const setRouteState = async (req, res) => {
 
     if (!updatedRoute) {
       return res.status(404).json({ message: "Route not found" });
+    }
+
+    if (newState === 'in_transit') {
+      await createNotification(
+        updatedRoute.delivery, 
+        'Ruta iniciada',
+        `Has comenzado la entrega hacia ${updatedRoute.address}.`
+      );
+    } else if (newState === 'delivered') {
+      await createNotification(
+        updatedRoute.delivery, 
+        'Entrega completada',
+        `Has completado la entrega en ${updatedRoute.address}.`
+      );
+    } else if (newState === 'cancelled') {
+      await createNotification(
+        updatedRoute.delivery, 
+        'Ruta cancelada',
+        `La entrega hacia ${updatedRoute.address} ha sido cancelada.`
+      );
+    } else if (newState === 'pending') {
+      await createNotification(
+        updatedRoute.delivery, 
+        'Ruta pendiente',
+        `La entrega hacia ${updatedRoute.address} está pendiente.`
+      );
     }
 
     res.status(200).json(updatedRoute);
