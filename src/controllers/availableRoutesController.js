@@ -5,10 +5,9 @@ import { availableRouteMapper } from "../mappers/routeMapper.js";
 
 export const getAllAvailableRoutes = async (req, res) => {
   try {
-    
     // Fetch available routes for the given deliveryId
     const routes = await Route.find({ state: "pending" })
-      .populate("package")  
+      .populate("package")
       .populate("client");
 
     // Map the routes to DTOs
@@ -17,24 +16,28 @@ export const getAllAvailableRoutes = async (req, res) => {
     res.status(200).json(dtos);
   } catch (error) {
     console.error("Error fetching available routes:", error);
-    res.status(500).json({error: "An error occurred while fetching available routes."});
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching available routes." });
   }
-}
+};
 
 export const setRouteState = async (req, res) => {
   try {
     const { routeId } = req.query;
-    const { newState } = req.body;
+    const { state, delivery } = req.body;
 
     // Validate input
-    if (!routeId || !newState) {
-      return res.status(400).json({ message: "Route ID and state are required" });
+    if (!routeId || !state || !delivery) {
+      return res
+        .status(400)
+        .json({ message: "Route ID, state or delivery are required" });
     }
 
     // Update the route state
     const updatedRoute = await Route.findByIdAndUpdate(
       routeId,
-      { state: newState },
+      { state: state, delivery: delivery },
       { new: true }
     );
 
@@ -45,6 +48,8 @@ export const setRouteState = async (req, res) => {
     res.status(200).json(updatedRoute);
   } catch (error) {
     console.error("Error updating route state:", error);
-    res.status(500).json({ error: "An error occurred while updating the route state." });
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the route state." });
   }
-}
+};
