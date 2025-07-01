@@ -44,3 +44,35 @@ o de la siguiente manera:
 - feature/delivery
 - feature/deliveryHistory
 - feature/pushNotifications
+
+## Cómo ejecutar el proyecto
+
+### Instalación de dependencias
+Para instalar todas las dependencias necesarias del proyecto, ejecuta el siguiente comando en la raíz del proyecto:
+```bash
+npm i
+```
+
+### Ejecutar en modo de desarrollo
+Para iniciar el servidor en modo de desarrollo, que se reiniciará automáticamente con cada cambio, usa:
+```bash
+npm run dev
+```
+
+### Ejecución para desarrollo en iOS
+Si estás desarrollando el frontend en un dispositivo iOS físico, necesitarás exponer tu backend local a internet. Para ello, usaremos `ngrok`.
+
+1.  Instala `ngrok` de forma global (si aún no lo tienes):
+    ```bash
+    npm i -g ngrok
+    ```
+2.  En una terminal, expón el puerto 3000 (o el puerto en el que se ejecute tu backend):
+    ```bash
+    ngrok http 3000
+    ```
+3.  `ngrok` te dará una URL pública (por ejemplo, `https://abcdef123456.ngrok.io`). **Importante:** Debes configurar esta URL en tu aplicación frontend para que pueda realizar las peticiones al backend.
+
+4.  En otra terminal, inicia el servidor de desarrollo como de costumbre:
+    ```bash
+    npm run dev
+    ```
