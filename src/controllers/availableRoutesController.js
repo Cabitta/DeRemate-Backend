@@ -1,7 +1,11 @@
 import Route from "../models/route.js";
 import Client from "../models/client.js";
 import Package from "../models/package.js";
-import { availableRouteMapper } from "../mappers/routeMapper.js";
+import {
+  availableRouteMapper,
+  inTransitRouteMapper,
+} from "../mappers/routeMapper.js";
+import { createNotification } from "./notificationController.js";
 import { generateAndSendDeliveryCode } from "../services/deliveryCodeService.js";
 
 export const getAllAvailableRoutes = async (req, res) => {
@@ -20,6 +24,34 @@ export const getAllAvailableRoutes = async (req, res) => {
     res
       .status(500)
       .json({ error: "An error occurred while fetching available routes." });
+  }
+};
+
+export const getInTransitRouteByDeliveryId = async (req, res) => {
+  try {
+    const { deliveryId } = req.query;
+
+    // Validate input
+    if (!deliveryId) {
+      return res.status(400).json({ message: "Delivery ID is required" });
+    }
+
+    // Fetch routes in transit for the given deliveryId
+    const inTransitRoute = await Route.findOne({
+      delivery: deliveryId,
+      state: "in_transit",
+    })
+      .populate("package")
+      .populate("client");
+
+    // Map the routes to DTOs
+    const dto = inTransitRouteMapper(inTransitRoute);
+
+    res.status(200).json(dto);
+
+    console.log("Route in transit:", dto);
+  } catch (error) {
+    console.error;
   }
 };
 
@@ -43,9 +75,11 @@ export const setRouteState = async (req, res) => {
     }
 
     // Update the route state
-    const updatedRoute = await Route.findByIdAndUpdate(routeId, updateData, {
-      new: true,
-    });
+    const updatedRoute = await Route.findByIdAndUpdate(
+      routeId,
+      { state: newState },
+      { new: true }
+    );
 
     if (!updatedRoute) {
       return res.status(404).json({ message: "Route not found" });
@@ -70,6 +104,9 @@ export const setRouteState = async (req, res) => {
     res.status(200).json(updatedRoute);
   } catch (error) {
     console.error("Error updating route state:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the route state." });
     res
       .status(500)
       .json({ error: "An error occurred while updating the route state." });
