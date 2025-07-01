@@ -48,8 +48,6 @@ export const getInTransitRouteByDeliveryId = async (req, res) => {
     const dto = inTransitRouteMapper(inTransitRoute);
 
     res.status(200).json(dto);
-
-    console.log("Route in transit:", dto);
   } catch (error) {
     console.error;
   }
