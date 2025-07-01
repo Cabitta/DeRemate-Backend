@@ -54,7 +54,6 @@ router.get("/delivery-details/:routeId", authRequired, async (req, res) => {
       });
     }
 
-    console.log("Ruta encontrada:", route);
     const deliveryDetail = DeliveryMapper.toDetail(route);
     res.json(deliveryDetail);
   } catch (error) {

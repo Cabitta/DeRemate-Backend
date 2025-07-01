@@ -231,7 +231,6 @@ export const login = async (request, response) => {
   try {
     // Passport ya validó las credenciales y colocó el usuario en request.user
     const user = request.user;
-    console.log("Entra aca")
     // Generar tokens y fechas de expiración
     const { accessToken, refreshToken, accessTokenExpiry, refreshTokenExpiry } =
       generateTokens(user._id);
@@ -252,7 +251,6 @@ export const login = async (request, response) => {
 
     response.cookie("token", accessToken);
     response.cookie("refreshToken", refreshToken, { httpOnly: true });
-    console.log("Entra al back")
     response.json({
       message: "Inicio de sesion exitoso",
       user: userData,
