@@ -2,18 +2,14 @@ import Route from "../models/route.js";
 import Client from "../models/client.js";
 import Package from "../models/package.js";
 import { availableRouteMapper } from "../mappers/routeMapper.js";
+import { createNotification } from "./notificationController.js";
 
-export const getAvailableRoutesByDeliveryId = async (req, res) => {
+
+export const getAllAvailableRoutes = async (req, res) => {
   try {
-    const { deliveryId } = req.query;
-    
-    // Validate deliveryId
-    if (!deliveryId) {
-      return res.status(400).json({ message: "Delivery ID is required" });
-    }
     
     // Fetch available routes for the given deliveryId
-    const routes = await Route.find({ delivery: deliveryId, state: "pending" })
+    const routes = await Route.find({ state: "pending" })
       .populate("package")  
       .populate("client");
 
@@ -46,6 +42,32 @@ export const setRouteState = async (req, res) => {
 
     if (!updatedRoute) {
       return res.status(404).json({ message: "Route not found" });
+    }
+
+    if (newState === 'in_transit') {
+      await createNotification(
+        updatedRoute.delivery, 
+        'Ruta iniciada',
+        `Has comenzado la entrega hacia ${updatedRoute.address}.`
+      );
+    } else if (newState === 'delivered') {
+      await createNotification(
+        updatedRoute.delivery, 
+        'Entrega completada',
+        `Has completado la entrega en ${updatedRoute.address}.`
+      );
+    } else if (newState === 'cancelled') {
+      await createNotification(
+        updatedRoute.delivery, 
+        'Ruta cancelada',
+        `La entrega hacia ${updatedRoute.address} ha sido cancelada.`
+      );
+    } else if (newState === 'pending') {
+      await createNotification(
+        updatedRoute.delivery, 
+        'Ruta pendiente',
+        `La entrega hacia ${updatedRoute.address} está pendiente.`
+      );
     }
 
     res.status(200).json(updatedRoute);
