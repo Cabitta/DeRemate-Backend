@@ -59,6 +59,64 @@ export const setRouteState = async (req, res) => {
     const { state, delivery } = req.body;
 
     // Validate input
+    if (!routeId || !state || !delivery) {
+      return res
+        .status(400)
+        .json({ message: "Route ID, state or delivery are required" });
+    }
+
+    // Update the route state
+    const updatedRoute = await Route.findByIdAndUpdate(
+      routeId,
+      { state: state, delivery: delivery },
+      { new: true }
+    );
+
+    if (!updatedRoute) {
+      return res.status(404).json({ message: "Route not found" });
+    }
+
+    if (state === "in_transit") {
+      await createNotification(
+        updatedRoute.delivery,
+        "Ruta iniciada",
+        `Has comenzado la entrega hacia ${updatedRoute.address}.`
+      );
+    } else if (state === "delivered") {
+      await createNotification(
+        updatedRoute.delivery,
+        "Entrega completada",
+        `Has completado la entrega en ${updatedRoute.address}.`
+      );
+    } else if (state === "cancelled") {
+      await createNotification(
+        updatedRoute.delivery,
+        "Ruta cancelada",
+        `La entrega hacia ${updatedRoute.address} ha sido cancelada.`
+      );
+    } else if (state === "pending") {
+      await createNotification(
+        updatedRoute.delivery,
+        "Ruta pendiente",
+        `La entrega hacia ${updatedRoute.address} está pendiente.`
+      );
+    }
+
+    res.status(200).json(updatedRoute);
+  } catch (error) {
+    console.error("Error updating route state:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the route state." });
+  }
+};
+
+export const setRouteStateTI = async (req, res) => {
+  try {
+    const { routeId } = req.query;
+    const { state, delivery } = req.body;
+
+    // Validate input
     if (!routeId || !state) {
       return res
         .status(400)
