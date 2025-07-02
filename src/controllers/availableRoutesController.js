@@ -95,7 +95,6 @@ export const setRouteState = async (req, res) => {
       return res.status(404).json({ message: "Route not found" });
     }
 
-    // Notificaciones (comentar temporalmente para evitar errores)
     if (state === "in_transit") {
       console.log("Setroute:", delivery);
       await createNotification(
